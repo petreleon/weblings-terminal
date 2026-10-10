@@ -2,6 +2,8 @@
 
 A Rust learning workspace with an interactive terminal, a syntax-aware editor, and the 94-exercise Rustlings collection from [Weblings](https://github.com/AngelOnFira/weblings).
 
+Visit the [live app](https://weblings-terminal.vercel.app) or browse [this application's source](https://github.com/petreleon/weblings-terminal).
+
 Rust compiles and executes in a dedicated Web Worker using Weblings’ real WASM compiler and WASI runtime. There is no simulated compiler, server-side execution, or access to the computer’s shell.
 
 ## Run locally
@@ -33,7 +35,9 @@ The application requires browser WebAssembly support and access to the upstream 
 
 The sandbox supports Rust’s bundled standard library, but no additional crates, OS networking, or OS threads. Clippy exercises are included as learning material but cannot be marked complete by rustc compilation alone. They require native `cargo clippy`. Thread exercises may also require native Rust. Stop a run with the Stop button or Ctrl+C. Jobs are terminated after 60 seconds.
 
-## Attribution
+## Inspiration and credits
+
+Inspired by [Weblings](https://github.com/AngelOnFira/weblings) by Forest Anderson. Credit to Weblings for the browser-based Rust learning concept and the compiler toolchain and runtime used here, and to Rustlings for the exercises.
 
 The execution worker, vendored WASI shim, and exercise data were adapted from Weblings commit `d0cd7a9f3af7d8249b3948ac0e19d2afc0d01633` by Forest Anderson. The compiler assets are hosted by the upstream project and are not included in this source repository.
 

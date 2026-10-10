@@ -6,7 +6,7 @@ export const layout = `
   <a class="brand" href="#" aria-label="Weblings home"><span class="brand-mark"><svg viewBox="0 0 32 32"><path d="m6 10 4 13 6-9 6 9 4-13"/></svg></span><span>weblings<span class="brand-dot">.</span></span></a>
   <div class="header-divider"></div><span class="workspace-label">YOUR RUST WORKSPACE</span>
   <nav class="mode-nav" aria-label="Workspace mode"><button id="mode-rustlings" class="active">${icon('sprout')} Rustlings</button><button id="mode-playground">${icon('square-terminal')} Playground</button></nav>
-  <div class="header-actions"><a class="source-link" href="https://github.com/AngelOnFira/weblings" target="_blank" rel="noopener">${icon('github')}<span>Source</span>${icon('arrow-up-right', 'tiny')}</a><span class="small-divider"></span><button class="icon-button" id="shortcuts" aria-label="Keyboard shortcuts">${icon('keyboard')}</button><button class="icon-button" id="settings" aria-label="Editor settings">${icon('settings-2')}</button></div>
+  <div class="header-actions"><a class="source-link" href="https://github.com/petreleon/weblings-terminal" target="_blank" rel="noopener">${icon('github')}<span>Source</span>${icon('arrow-up-right', 'tiny')}</a><span class="small-divider"></span><button class="icon-button" id="shortcuts" aria-label="Keyboard shortcuts">${icon('keyboard')}</button><button class="icon-button" id="settings" aria-label="Editor settings">${icon('settings-2')}</button></div>
 </header>
 <div class="app-body">
   <aside class="sidebar" id="sidebar" aria-label="Rustlings exercises">
@@ -45,7 +45,7 @@ export const layout = `
     </div>
   </main>
 </div>
-<footer class="global-status"><button id="engine-status" title="Click to retry if the compiler is unavailable"><span class="live-dot"></span><span id="engine-message">Preparing Rust compiler</span><span id="engine-progress">0%</span></button><div class="toolchain-progress"><div id="toolchain-bar"></div></div><span class="global-status-right"><span>${icon('shield-check')} Runs in your browser</span><span class="global-divider"></span><a href="https://github.com/AngelOnFira/weblings" target="_blank" rel="noopener">Powered by Weblings ${icon('arrow-up-right')}</a></span></footer>
+<footer class="global-status"><button id="engine-status" title="Click to retry if the compiler is unavailable"><span class="live-dot"></span><span id="engine-message">Preparing Rust compiler</span><span id="engine-progress">0%</span></button><div class="toolchain-progress"><div id="toolchain-bar"></div></div><span class="global-status-right"><span>${icon('shield-check')} Runs in your browser</span><span class="global-divider"></span><a href="https://github.com/AngelOnFira/weblings" target="_blank" rel="noopener" title="Weblings by Forest Anderson — inspiration and browser Rust toolchain">Inspired by Weblings ${icon('arrow-up-right')}</a></span></footer>
 <dialog id="modal"><div class="modal-inner"><div class="modal-heading"><h2 id="modal-title"></h2><button class="icon-button" id="close-modal" aria-label="Close dialog">${icon('x')}</button></div><div id="modal-content"></div></div></dialog>
 <div class="toast" id="toast" role="status"></div>
 `;
