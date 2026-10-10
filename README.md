@@ -17,6 +17,7 @@ Open the printed localhost URL. `npm run build` type-checks TypeScript and creat
 
 - Rustlings and a free-form playground.
 - CodeMirror Rust editor with line numbers, undo, compiler diagnostics, and adjustable font size.
+- Live compiler diagnostics on opening an exercise and 450 ms after editing, before running code. Problems appear by default; checks include test modules for test exercises, but never execute programs or mark exercises complete. Superseded checks are cancelled, and explicit runs take priority.
 - xterm.js terminal with command history, completion, selection, and cancellation.
 - `run`, `check`, `hint`, `next`, `open <name>`, `list`, `status`, `reset`, `clear`, and `help` commands.
 - Real test harness execution for test exercises; compile-only checks do not mark them complete.

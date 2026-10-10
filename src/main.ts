@@ -2,6 +2,7 @@ import { refreshIcons } from './icons';
 import { layout, icon } from './layout';
 import { CodeEditor } from './editor';
 import { RustEngine, type RustResult } from './engine';
+import { LiveChecks } from './live-checks';
 import { WorkspaceTerminal, colors } from './terminal';
 import { readState, saveState, playgroundSource, topicOf, topicName, topicDescriptions, escapeHtml, type Exercise } from './data';
 import './style.css';
@@ -18,6 +19,12 @@ const expanded = new Set(['00_intro', '01_variables']);
 const engine = new RustEngine();
 const terminal = new WorkspaceTerminal($('terminal'));
 const editor = new CodeEditor($('code-editor'), () => void terminal.execute('run'));
+const liveChecks = new LiveChecks(engine, () => ({
+  key: state.mode === 'playground' ? 'playground' : current.name,
+  source: editor.source,
+  isTest: state.mode === 'rustlings' && current.test,
+  constCheck: state.mode === 'rustlings' ? current.const_check : undefined
+}));
 let toastTimer: ReturnType<typeof setTimeout>;
 
 function toast(text: string) {
@@ -33,6 +40,8 @@ editor.onChange = source => {
   if (applying) return;
   if (state.mode === 'playground') state.playground = source; else if (current) state.drafts[current.name] = source;
   persist();
+  // EditorView cannot accept a diagnostics transaction inside its update listener.
+  queueMicrotask(() => liveChecks.schedule());
 };
 editor.onCursor = (line, column) => { $('cursor-position').textContent = `Ln ${line}, Col ${column}`; };
 
@@ -83,17 +92,29 @@ function renderWorkspace() {
   $('completion-label').innerHTML = pg ? `${icon('sparkles')} Make it your own` : state.done.includes(current.name) ? `${icon('circle-check')} Exercise completed` : `${icon('circle-dashed')} Not completed yet`;
   $('completion-label').classList.toggle('is-complete', !pg && state.done.includes(current.name));
   applying = true; editor.source = pg ? state.playground : (state.drafts[current.name] ?? current.exercise); applying = false;
-  lastProblems = []; renderProblems();
+  lastProblems = []; showProblems(); liveChecks.schedule();
   terminal.directory = pg ? '~/playground' : '~/rustlings';
   refreshIcons();
 }
 
 function showTerminal() { $('terminal-content').hidden = false; $('problems').hidden = true; $('terminal-tab').classList.add('active'); $('problems-tab').classList.remove('active'); terminal.fit(); }
+function showProblems() { $('terminal-content').hidden = true; $('problems').hidden = false; $('terminal-tab').classList.remove('active'); $('problems-tab').classList.add('active'); }
 function renderProblems() {
   $('problem-count').textContent = String(lastProblems?.length ?? 0);
-  $('problems').innerHTML = lastProblems?.length ? lastProblems.map((d, i) => `<button class="problem" data-problem="${i}">${icon(d.level === 'error' ? 'circle-x' : 'triangle-alert')}<span><strong>${escapeHtml(d.message)}</strong><small>${d.line ? `Line ${d.line}, column ${d.col ?? 1}` : 'Compiler diagnostic'}</small></span>${icon('arrow-up-right')}</button>`).join('') : `<div class="no-problems">${icon('circle-check')}<strong>No diagnostics to show.</strong><p>Run your code to check it with the compiler.</p></div>`;
+  const phase = liveChecks.state.phase;
+  const pending = phase === 'waiting' || phase === 'queued' || phase === 'checking';
+  $('problems').innerHTML = lastProblems?.length ? lastProblems.map((d, i) => `<button class="problem ${d.level}" data-problem="${i}">${icon(d.level === 'error' ? 'circle-x' : 'triangle-alert')}<span><strong>${escapeHtml(d.message)}</strong><small>${d.line ? `Line ${d.line}, column ${d.col ?? 1}` : 'Compiler diagnostic'}</small></span>${icon('arrow-up-right')}</button>`).join('') : `<div class="no-problems">${icon(pending ? 'circle-dashed' : phase === 'error' ? 'alert-circle' : 'circle-check')}<strong>${pending ? phase === 'waiting' ? 'Waiting for the compiler…' : 'Checking your code…' : phase === 'error' ? 'Live check unavailable' : phase === 'paused' ? 'Program running' : 'No compiler problems.'}</strong><p>${escapeHtml(liveChecks.state.message)}</p></div>`;
   refreshIcons();
 }
+liveChecks.onState = check => {
+  lastProblems = check.diagnostics;
+  editor.diagnostics(lastProblems);
+  $('live-check-status').textContent = check.phase === 'ready' ? lastProblems.length ? `Live: ${lastProblems.length} issue${lastProblems.length === 1 ? '' : 's'}` : 'Live: no issues' : check.phase === 'error' ? 'Live: unavailable' : check.phase === 'paused' ? 'Live: paused' : 'Live: checking…';
+  $('live-check-status').title = check.message;
+  $('live-check-status').dataset.phase = check.phase;
+  $('problems-tab').setAttribute('aria-label', `Problems, ${lastProblems.length} compiler issues. ${check.message}`);
+  renderProblems();
+};
 
 function showHint() {
   if (state.mode === 'playground') { toast('The playground is yours. Try help for available commands.'); return; }
@@ -103,6 +124,7 @@ function showHint() {
 
 async function runCode(checkOnly = false, testsOverride?: boolean) {
   if (running) return;
+  liveChecks.pause();
   running = true; const source = editor.source; const pg = state.mode === 'playground'; const ex = current;
   const testMode = testsOverride ?? (!pg && ex.test);
   showTerminal();
@@ -123,6 +145,7 @@ async function runCode(checkOnly = false, testsOverride?: boolean) {
     running = false; $('run-code').classList.remove('is-running');
     $('run-code').querySelector('span')!.textContent = !pg && ex.test ? 'Run tests' : 'Run code';
     $('terminal-status').textContent = 'Ready when you are';
+    liveChecks.resume();
   }
 }
 function displayResult(result: RustResult, checkOnly: boolean, pg: boolean, ex: Exercise, source: string) {
@@ -201,7 +224,7 @@ $('download-code').onclick = () => {
 };
 $('show-hint').onclick = showHint; $('next-exercise').onclick = nextExercise;
 $('terminal-tab').onclick = showTerminal;
-$('problems-tab').onclick = () => { $('terminal-content').hidden = true; $('problems').hidden = false; $('terminal-tab').classList.remove('active'); $('problems-tab').classList.add('active'); };
+$('problems-tab').onclick = showProblems;
 $('problems').onclick = event => { const button = (event.target as HTMLElement).closest<HTMLElement>('[data-problem]'); if (button) editor.jump(lastProblems?.[Number(button.dataset.problem)].line ?? 1); };
 $('clear-terminal').onclick = () => terminal.clear();
 $('help-command').onclick = () => { showTerminal(); void terminal.execute('help'); terminal.focus(); };
@@ -230,7 +253,7 @@ engine.onState = data => {
   $('engine-status').dataset.phase = data.phase; $('toolchain-bar').style.width = `${data.phase === 'ready' ? 100 : percent}%`;
   document.querySelector('.toolchain-progress')?.classList.toggle('loaded', data.phase === 'ready');
 };
-$('engine-status').onclick = () => { if (engine.state.phase === 'error') void engine.load().catch(e => toast(e.message)); };
+$('engine-status').onclick = () => { if (engine.state.phase === 'error') void engine.load().then(() => liveChecks.schedule()).catch(e => toast(e.message)); };
 refreshIcons(); terminal.welcome();
 async function boot() { try {
   const response = await fetch('/rustlings/exercises.json');
