@@ -1,0 +1,27 @@
+{
+  "name": "weblings-terminal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@codemirror/lang-rust": "^6.0.2",
+    "@codemirror/view": "^6.38.6",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/commands": "^6.8.1",
+    "@codemirror/language": "^6.11.3",
+    "@codemirror/lint": "^6.8.5",
+    "@lezer/highlight": "^1.2.1",
+    "@xterm/xterm": "^5.5.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "lucide": "^0.468.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vite": "^7.1.9"
+  }
+}
